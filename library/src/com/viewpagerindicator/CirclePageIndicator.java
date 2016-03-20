@@ -57,6 +57,7 @@ public class CirclePageIndicator extends View implements PageIndicator {
     private int mOrientation;
     private boolean mCentered;
     private boolean mSnap;
+    private float mGap;
 
     private int mTouchSlop;
     private float mLastMotionX = -1;
@@ -86,6 +87,7 @@ public class CirclePageIndicator extends View implements PageIndicator {
         final float defaultRadius = res.getDimension(R.dimen.default_circle_indicator_radius);
         final boolean defaultCentered = res.getBoolean(R.bool.default_circle_indicator_centered);
         final boolean defaultSnap = res.getBoolean(R.bool.default_circle_indicator_snap);
+        final float defaultGap = res.getDimension(R.dimen.default_circle_indicator_gap);
 
         //Retrieve styles attributes
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CirclePageIndicator, defStyle, 0);
@@ -101,6 +103,7 @@ public class CirclePageIndicator extends View implements PageIndicator {
         mPaintFill.setColor(a.getColor(R.styleable.CirclePageIndicator_fillColor, defaultFillColor));
         mRadius = a.getDimension(R.styleable.CirclePageIndicator_radius, defaultRadius);
         mSnap = a.getBoolean(R.styleable.CirclePageIndicator_snap, defaultSnap);
+        mGap = a.getDimension(R.styleable.CirclePageIndicator_gap, defaultGap);
 
         Drawable background = a.getDrawable(R.styleable.CirclePageIndicator_android_background);
         if (background != null) {
@@ -193,6 +196,15 @@ public class CirclePageIndicator extends View implements PageIndicator {
     public boolean isSnap() {
         return mSnap;
     }
+    
+    public void setGap(float gap){
+    	mGap = gap;
+    	invalidate();
+    }
+    
+    public float getGap(){
+    	return mGap;
+    }
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -227,11 +239,11 @@ public class CirclePageIndicator extends View implements PageIndicator {
             shortPaddingBefore = getPaddingLeft();
         }
 
-        final float threeRadius = mRadius * 3;
+        final float twoRadius = mRadius * 2;
         final float shortOffset = shortPaddingBefore + mRadius;
         float longOffset = longPaddingBefore + mRadius;
         if (mCentered) {
-            longOffset += ((longSize - longPaddingBefore - longPaddingAfter) / 2.0f) - ((count * threeRadius) / 2.0f);
+            longOffset += ((longSize - longPaddingBefore - longPaddingAfter) / 2.0f) - ((count * twoRadius+(count -1)*mGap) / 2.0f);
         }
 
         float dX;
@@ -244,7 +256,7 @@ public class CirclePageIndicator extends View implements PageIndicator {
 
         //Draw stroked circles
         for (int iLoop = 0; iLoop < count; iLoop++) {
-            float drawLong = longOffset + (iLoop * threeRadius);
+            float drawLong = longOffset + (iLoop * (twoRadius+mGap));
             if (mOrientation == HORIZONTAL) {
                 dX = drawLong;
                 dY = shortOffset;
@@ -264,10 +276,10 @@ public class CirclePageIndicator extends View implements PageIndicator {
         }
 
         //Draw the filled circle according to the current scroll
-        float cx = (mSnap ? mSnapPage : mCurrentPage) * threeRadius;
-        if (!mSnap) {
-            cx += mPageOffset * threeRadius;
-        }
+		float cx = (mSnap ? mSnapPage : mCurrentPage) * (twoRadius + mGap);
+		if (!mSnap) {
+			cx += mPageOffset * (twoRadius + mGap);
+		}
         if (mOrientation == HORIZONTAL) {
             dX = longOffset + cx;
             dY = shortOffset;
